@@ -286,17 +286,20 @@ deleted:    level.dat_old
 - Leads into `this.startOrContinueFileFixing()`
 - Schemas located at `net/minecraft/util/filefix/fixes/*.java::makeFixer()`
 
-# Project Name
-
-Name = minecraft 26.1 world downgrader
-- Boring = Easy to find
-
 # Operations Dump
 
-1. LegacyStructureFileFix
-2. ResourcePackLocationFileFix
-3. DimensionStorageFileFix
-4. PlayerStorageFileFix
+1. LegacyStructureFileFix (no clue what it does)
+2. ~~ResourcePackLocationFileFix~~
+3. ~~DimensionStorageFileFix~~
+4. ~~PlayerStorageFileFix~~
 5. LevelDatToSavedDataFileFix
-6. RemoveObsoleteFilesFileFix
-7. GeneratedStructuresRenameFileFix
+6. RemoveObsoleteFilesFileFix (removes stuff like `Mansion_index.dat`, no clue what those do)
+7. ~~GeneratedStructuresRenameFileFix~~
+
+
+
+# TODO
+
+```
+FileFixOperations.moveRegex("command_storage_([a-z0-9_.-]+)\\.dat", "$1/command_storage\\.dat"),
+```

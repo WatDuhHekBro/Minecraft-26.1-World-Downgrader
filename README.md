@@ -9,5 +9,13 @@ A small tool to downgrade worlds in the new Minecraft 26.1 level format to the o
 ## TODO
 
 - level.dat
+    - Old level.dat
+    - New splinter files
 - Miscellaneous Stuff
 - Code Cleanup (probably)
+
+## Known Issues
+
+- Doesn't support modded dimensions
+    - Would need figure out `modid` to `DIM#` conversion first (or prompt?)
+    - `chunks.dat`, `raids.dat`, `world_border.dat`

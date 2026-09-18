@@ -2620,6 +2620,7 @@ name = "minecraft-26_1-world-downgrader"
 version = "0.1.0"
 dependencies = [
  "fastnbt",
+ "flate2",
  "serde",
  "slint",
  "slint-build",

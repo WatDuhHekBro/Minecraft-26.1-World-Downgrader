@@ -4,6 +4,8 @@ use std::{
 };
 use walkdir::WalkDir;
 
+use crate::dat;
+
 // Q: Why not just move the entire folder (dimensions/minecraft/overworld/data) instead of each individual file?
 // A: Minecraft 26.1 doesn't move any files that aren't specific to vanilla Minecraft.
 //    "DIM-1/data/capabilities.dat" will not get transferred over because that's a modded file.
@@ -179,6 +181,12 @@ fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
     if relative_path == "" {
         return TransformType::SimpleMove(Box::new(Path::new("").join(relative_path)));
     }*/
+
+    // NBT Stuff
+    if relative_path == "level.dat" {
+        dat::asdf();
+        return TransformType::KeepAsIs;
+    }
 
     // Specific One-Offs
     if relative_path == "data/minecraft/maps/last_id.dat" {
