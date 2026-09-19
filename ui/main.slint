@@ -1,0 +1,71 @@
+import { VerticalBox, Button, TextEdit } from "std-widgets.slint";
+
+export component Main inherits Window {
+    in property <string> args-title: "Minecraft 26.1 World Downgrader (Unknown Version)";
+    title: args-title;
+    width: 600px;
+    height: 400px;
+
+    in-out property <string> status: "Waiting for user...";
+    callback execute-downgrade();
+
+    /*in-out property <string> folder: "N/A";
+    callback delete-folder-yes();
+    callback delete-folder-no();
+
+    callback show-popup();
+    show-popup => {
+        popup.show();
+    }
+
+    popup := PopupWindow {
+        width: 100px;
+        height: 250px;
+
+        Text {
+            text: "Do you want to delete the following folder? \{root.folder}";
+        }
+
+        Button {
+            text: "Yes";
+            clicked => {
+                root.execute-downgrade();
+            }
+        }
+
+        Button {
+            text: "No";
+            clicked => {
+                root.execute-downgrade();
+            }
+        }
+    }*/
+
+    VerticalBox {
+        Text {
+            text: "Minecraft 26.1 World Downgrader (to 1.21.11)";
+        }
+
+        Rectangle {
+            background: #8f150a;
+
+            Text {
+                text: "Status:";
+            }
+            
+            VerticalBox {
+                TextEdit {
+                    text: "\{root.status}";
+                    read-only: true;
+                }
+            }
+        }
+
+        Button {
+            text: "Downgrade a World";
+            clicked => {
+                root.execute-downgrade();
+            }
+        }
+    }
+}

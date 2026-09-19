@@ -2,14 +2,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewWanderingTrader {
-    data: NewWanderingTraderData,
+    pub data: NewWanderingTraderData,
 
     #[serde(rename = "DataVersion")]
-    data_version: i32,
+    pub data_version: i32,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct NewWanderingTraderData {
-    spawn_delay: i32,
-    spawn_chance: i32,
+pub struct NewWanderingTraderData {
+    pub spawn_delay: i32,
+    pub spawn_chance: i32,
 }

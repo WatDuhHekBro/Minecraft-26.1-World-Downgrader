@@ -1,14 +1,13 @@
-pub mod convert_level;
-pub mod custom_boss_events;
-pub mod ender_dragon_fight;
-pub mod game_rules;
+//pub mod custom_boss_events;
+//pub mod ender_dragon_fight;
+//pub mod game_rules;
 pub mod level_common;
 pub mod level_new;
 pub mod level_old;
-pub mod scheduled_events;
+//pub mod scheduled_events;
 pub mod wandering_trader;
 pub mod weather;
-pub mod world_clocks;
+//pub mod world_clocks;
 pub mod world_gen_settings;
 
 use flate2::{Compression, read::GzDecoder, write::GzEncoder};
@@ -19,8 +18,8 @@ use std::{
 };
 
 use crate::dat::{
-    level_new::NewLevelDat, level_old::OldLevelDat, weather::NewWeather,
-    world_gen_settings::NewWorldGenSettings,
+    level_new::NewLevelDat, level_old::OldLevelDat, wandering_trader::NewWanderingTrader,
+    weather::NewWeather, world_gen_settings::NewWorldGenSettings,
 };
 
 pub fn read_gzipped_bytes(absolute_path: &Path) -> Vec<u8> {
@@ -49,6 +48,12 @@ pub fn read_leveldat(absolute_path: &Path) -> NewLevelDat {
 pub fn write_leveldat(absolute_path: &Path, leveldat: OldLevelDat) {
     let bytes = fastnbt::to_bytes(&leveldat).unwrap();
     write_gzipped_bytes(absolute_path, &bytes);
+}
+
+pub fn read_wandering_trader(absolute_path: &Path) -> NewWanderingTrader {
+    let bytes = read_gzipped_bytes(absolute_path);
+    let data = fastnbt::from_bytes::<NewWanderingTrader>(&bytes).unwrap();
+    data
 }
 
 pub fn read_weather(absolute_path: &Path) -> NewWeather {

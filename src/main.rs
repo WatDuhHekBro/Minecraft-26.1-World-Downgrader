@@ -5,15 +5,46 @@ slint::include_modules!();
 
 mod dat;
 mod paths;
+mod util;
+
+use native_dialog::DialogBuilder;
 
 fn main() -> Result<(), slint::PlatformError> {
-    paths::create_downgraded_copy(&String::from(
-        r"/home/watduhhekbro/downloads/galarov/GALAROV_TEST_done/",
-    ));
+    let title = format!(
+        "Minecraft 26.1 World Downgrader (v{})",
+        env!("CARGO_PKG_VERSION")
+    );
 
-    // if result = error, then delete new directory probably --> prompt user with full path to delete
+    let ui = Main::new()?;
+    ui.set_args_title(title.into());
+    let ui_handle = ui.as_weak();
 
-    //let main_window = MainWindow::new()?;
-    //main_window.run()
-    Ok(())
+    ui.on_execute_downgrade(move || {
+        let ui = ui_handle.unwrap();
+
+        // Locate directory
+        let path = DialogBuilder::file().open_single_dir().show().unwrap();
+
+        let Some(path) = path else {
+            ui.set_status("User cancelled the file dialogue.".into());
+            return;
+        };
+
+        let result = paths::create_downgraded_copy(&path);
+
+        match result {
+            Ok(_) => {
+                ui.set_status(
+                    "Successfully created a downgraded copy (in the same folder).".into(),
+                );
+            }
+            Err(error) => {
+                ui.set_status(format!("{error}").into());
+            }
+        }
+    });
+
+    ui.run()
+
+    //Ok(())
 }

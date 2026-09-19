@@ -4,9 +4,13 @@ use std::{
 };
 use walkdir::WalkDir;
 
-use crate::dat::{
-    self, level_new::NewLevelDat, level_old::convert_new_leveldat_to_old_leveldat,
-    weather::NewWeather, world_gen_settings::NewWorldGenSettings,
+use crate::{
+    dat::{
+        self, level_new::NewLevelDat, level_old::convert_new_leveldat_to_old_leveldat,
+        wandering_trader::NewWanderingTrader, weather::NewWeather,
+        world_gen_settings::NewWorldGenSettings,
+    },
+    util::SimpleError,
 };
 
 // Q: Why not just move the entire folder (dimensions/minecraft/overworld/data) instead of each individual file?
@@ -30,22 +34,21 @@ enum TransformType {
 #[derive(Default)]
 struct NbtTransfer {
     level: Option<NewLevelDat>,
-    ender_dragon_fight: Option<i32>,
-    custom_boss_events: Option<i32>,
-    game_rules: Option<i32>,
-    scheduled_events: Option<i32>,
-    wandering_trader: Option<i32>,
+    //ender_dragon_fight: Option<i32>,
+    //custom_boss_events: Option<i32>,
+    //game_rules: Option<i32>,
+    //scheduled_events: Option<i32>,
+    wandering_trader: Option<NewWanderingTrader>,
     weather: Option<NewWeather>,
-    world_clocks: Option<i32>,
+    //world_clocks: Option<i32>,
     world_gen_settings: Option<NewWorldGenSettings>,
 }
 
 const ERROR_PATH_STRIP_PREFIX: &str =
     "path.strip_prefix() didn't work even with identical prefixes";
 
-pub fn create_downgraded_copy(world_path: &String) {
+pub fn create_downgraded_copy(world_path: &Path) -> Result<(), Box<dyn std::error::Error>> {
     let mut nbt_table = NbtTransfer::default();
-    let world_path = Path::new(&world_path);
     let new_world_path = {
         let mut new_file_name = world_path.file_name().unwrap().to_os_string();
         new_file_name.push(" (Downgraded)");
@@ -55,25 +58,29 @@ pub fn create_downgraded_copy(world_path: &String) {
         world_path.with_file_name(new_file_name)
     };
 
-    if fs::exists(&new_world_path).unwrap() {
-        println!("\"{}\" already exists!", new_world_path.display());
-        return;
+    if fs::exists(&new_world_path)? {
+        return Err(Box::new(SimpleError::from(format!(
+            "\"{}\" already exists!",
+            new_world_path.display()
+        ))));
     }
 
     // First: Gather all move operations
-    let operations = get_list_of_all_move_operations(world_path, &mut nbt_table).unwrap();
+    let operations = get_list_of_all_move_operations(world_path, &mut nbt_table)?;
 
     // Then: Actually do the moving
     let result = execute_file_operations(&new_world_path, &operations, &nbt_table);
 
     // If unsuccessful, then delete new directory
     if let Err(error) = result {
-        eprintln!(
+        return Err(Box::new(SimpleError::from(format!(
             "{error}\n\nCleaning up {}... (currently you need to manually delete it)",
             new_world_path.display()
-        );
+        ))));
         //fs::remove_dir_all(new_world_path).unwrap();
     }
+
+    Ok(())
 }
 
 fn get_list_of_all_move_operations(
@@ -201,6 +208,7 @@ fn get_transformed_path_dirs(
         return TransformType::Drop;
     }
     if relative_path == "data/minecraft/wandering_trader.dat" {
+        nbt_table.wandering_trader = Some(dat::read_wandering_trader(absolute_path));
         return TransformType::Drop;
     }
     if relative_path == "data/minecraft/weather.dat" {
@@ -307,6 +315,7 @@ fn execute_file_operations(
             if transformed_path == "level.dat" {
                 let oldleveldat = convert_new_leveldat_to_old_leveldat(
                     nbt_table.level.as_ref().unwrap(),
+                    nbt_table.wandering_trader.as_ref().unwrap(),
                     nbt_table.weather.as_ref().unwrap(),
                     nbt_table.world_gen_settings.as_ref().unwrap(),
                 );

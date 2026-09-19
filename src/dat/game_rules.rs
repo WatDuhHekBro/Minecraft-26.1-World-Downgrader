@@ -6,5 +6,5 @@ pub struct NewGameRules {
     pub data: Value,
 
     #[serde(rename = "DataVersion")]
-    data_version: i32,
+    pub data_version: i32,
 }

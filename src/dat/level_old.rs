@@ -1,8 +1,10 @@
+use fastnbt::IntArray;
 use serde::{Deserialize, Serialize};
 
 use crate::dat::{
     level_common::{LevelDatDataPacks, LevelDatSpawn, LevelDatVersionInfo},
     level_new::{NewLevelDat, NewLevelDatData},
+    wandering_trader::NewWanderingTrader,
     weather::{NewWeather, NewWeatherData},
     world_gen_settings::{NewWorldGenSettings, OldWorldGenSettings},
 };
@@ -124,14 +126,15 @@ struct OldLevelDatData {
     #[serde(rename = "Version")]
     version_info: LevelDatVersionInfo,
 
-    /*#[serde(rename = "WanderingTraderId")]
+    #[serde(rename = "WanderingTraderId")]
     wandering_trader_id: Option<IntArray>,
 
     #[serde(rename = "WanderingTraderSpawnChance")]
     wandering_trader_spawn_chance: i32,
 
     #[serde(rename = "WanderingTraderSpawnDelay")]
-    wandering_trader_spawn_delay: i32,*/
+    wandering_trader_spawn_delay: i32,
+
     #[serde(rename = "WasModded")]
     was_modded: bool,
 
@@ -141,6 +144,7 @@ struct OldLevelDatData {
 
 pub fn convert_new_leveldat_to_old_leveldat(
     leveldat: &NewLevelDat,
+    wandering_trader: &NewWanderingTrader,
     weather: &NewWeather,
     worldgen: &NewWorldGenSettings,
 ) -> OldLevelDat {
@@ -215,9 +219,9 @@ pub fn convert_new_leveldat_to_old_leveldat(
                 series: "main".into(),
                 snapshot: false,
             },
-            //wandering_trader_id: (),
-            //wandering_trader_spawn_chance: (),
-            //wandering_trader_spawn_delay: (),
+            wandering_trader_id: None,
+            wandering_trader_spawn_chance: wandering_trader.data.spawn_chance,
+            wandering_trader_spawn_delay: wandering_trader.data.spawn_delay,
             was_modded,
             world_gen_settings: OldWorldGenSettings::from(worldgen),
         },

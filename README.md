@@ -12,6 +12,14 @@ A small tool to downgrade worlds in the new level format introduced in Minecraft
     - New splinter files
 - Miscellaneous Stuff
 
+Finish NBT data moves
+- custom_boss_events.dat
+- ender_dragon_fight.dat
+- game_rules.dat
+- scheduled_events.dat
+- world_clocks.dat
+- `<namespace>/command_storage.dat` = `command_storage_<namespace>.dat`
+
 ## Known Issues
 
 - Doesn't support modded dimensions
@@ -22,9 +30,17 @@ A small tool to downgrade worlds in the new level format introduced in Minecraft
 
 ## Personal Observations
 
-Going from 26.1.2 to 1.21.11 incurs no apparent data loss. However, going from 1.21.11 to 1.21.1, there are some things I notice:
+Going from 26.1.2 to 1.21.11 incurs no apparent data loss.
+
+However, going from 1.21.11 to 1.21.1, there are some things I notice:
 - Specifically armor you are wearing will disappear
 - Signs will become blank
 
 If I use [Chunker](https://www.chunker.app/) to convert the 26.1.2 chunks directly to 1.21.1 and manually merge the result with my downgrader, what happens?
 - 26.3 to 26.2 requires it, or you will spawn in a void world for some reason.
+
+## Wiki Reference
+
+https://minecraft.wiki/w/Java_Edition_26.1
+https://minecraft.wiki/w/Java_Edition_level_format
+https://minecraft.wiki/w/Java_Edition_level_format?oldid=3301607
