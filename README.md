@@ -6,6 +6,10 @@ A small tool to downgrade worlds in the new level format introduced in Minecraft
 
 *Manual downgrades beyond that point (like opening the world in 1.21.1) should work fine-ish. Probably.*
 
+## Download Link
+
+To download this program, head over to the [Releases](https://github.com/WatDuhHekBro/Minecraft-26.1-World-Downgrader/releases) and download the executable for your platform.
+
 ## TODO
 
 - level.dat
