@@ -4,7 +4,10 @@ use std::{
 };
 use walkdir::WalkDir;
 
-use crate::dat;
+use crate::dat::{
+    self, level_new::NewLevelDat, level_old::convert_new_leveldat_to_old_leveldat,
+    weather::NewWeather, world_gen_settings::NewWorldGenSettings,
+};
 
 // Q: Why not just move the entire folder (dimensions/minecraft/overworld/data) instead of each individual file?
 // A: Minecraft 26.1 doesn't move any files that aren't specific to vanilla Minecraft.
@@ -14,11 +17,8 @@ use crate::dat;
 struct WorldFileInfo {
     // /home/watduhhekbro/downloads/galarov/GALAROV_TEST_done/dimensions/minecraft/overworld/data/minecraft/chunk_tickets.dat
     absolute_path: PathBuf,
-    // dimensions/minecraft/overworld/data/minecraft/chunk_tickets.dat
-    relative_path: PathBuf,
     // data/chunks.dat
     transformed_path: Option<PathBuf>,
-    nbt_operation: Option<i32>,
 }
 
 enum TransformType {
@@ -27,10 +27,24 @@ enum TransformType {
     KeepAsIs,
 }
 
+#[derive(Default)]
+struct NbtTransfer {
+    level: Option<NewLevelDat>,
+    ender_dragon_fight: Option<i32>,
+    custom_boss_events: Option<i32>,
+    game_rules: Option<i32>,
+    scheduled_events: Option<i32>,
+    wandering_trader: Option<i32>,
+    weather: Option<NewWeather>,
+    world_clocks: Option<i32>,
+    world_gen_settings: Option<NewWorldGenSettings>,
+}
+
 const ERROR_PATH_STRIP_PREFIX: &str =
     "path.strip_prefix() didn't work even with identical prefixes";
 
 pub fn create_downgraded_copy(world_path: &String) {
+    let mut nbt_table = NbtTransfer::default();
     let world_path = Path::new(&world_path);
     let new_world_path = {
         let mut new_file_name = world_path.file_name().unwrap().to_os_string();
@@ -47,10 +61,10 @@ pub fn create_downgraded_copy(world_path: &String) {
     }
 
     // First: Gather all move operations
-    let operations = get_list_of_all_move_operations(world_path).unwrap();
+    let operations = get_list_of_all_move_operations(world_path, &mut nbt_table).unwrap();
 
     // Then: Actually do the moving
-    let result = execute_file_operations(&new_world_path, &operations);
+    let result = execute_file_operations(&new_world_path, &operations, &nbt_table);
 
     // If unsuccessful, then delete new directory
     if let Err(error) = result {
@@ -64,6 +78,7 @@ pub fn create_downgraded_copy(world_path: &String) {
 
 fn get_list_of_all_move_operations(
     world_path: &Path,
+    nbt_table: &mut NbtTransfer,
 ) -> Result<Vec<WorldFileInfo>, walkdir::Error> {
     let mut operations = Vec::new();
 
@@ -77,17 +92,16 @@ fn get_list_of_all_move_operations(
         let relative_path = absolute_path
             .strip_prefix(world_path)
             .expect(ERROR_PATH_STRIP_PREFIX);
-        let transformed_path = match get_transformed_path_dirs(relative_path) {
-            TransformType::Move(path_buf) => Some(path_buf.to_path_buf()),
-            TransformType::Drop => None,
-            // If there's nothing to do, you still copy the file over, just at the same location.
-            TransformType::KeepAsIs => Some(relative_path.to_path_buf()),
-        };
+        let transformed_path =
+            match get_transformed_path_dirs(&absolute_path, relative_path, nbt_table) {
+                TransformType::Move(path_buf) => Some(path_buf.to_path_buf()),
+                TransformType::Drop => None,
+                // If there's nothing to do, you still copy the file over, just at the same location.
+                TransformType::KeepAsIs => Some(relative_path.to_path_buf()),
+            };
         let info = WorldFileInfo {
             absolute_path: absolute_path.clone(),
-            relative_path: relative_path.to_path_buf(),
             transformed_path,
-            nbt_operation: None,
         };
         operations.push(info);
     }
@@ -95,7 +109,11 @@ fn get_list_of_all_move_operations(
     Ok(operations)
 }
 
-fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
+fn get_transformed_path_dirs(
+    absolute_path: &Path,
+    relative_path: &Path,
+    nbt_table: &mut NbtTransfer,
+) -> TransformType {
     // NOTE: This could probably be done better... but oh well, no modded dimension support yet
 
     // -----
@@ -167,7 +185,34 @@ fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
 
     // NBT Stuff
     if relative_path == "level.dat" {
+        nbt_table.level = Some(dat::read_leveldat(absolute_path));
         return TransformType::KeepAsIs;
+    }
+    if relative_path == "dimensions/minecraft/the_end/data/minecraft/ender_dragon_fight.dat" {
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/custom_boss_events.dat" {
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/game_rules.dat" {
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/scheduled_events.dat" {
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/wandering_trader.dat" {
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/weather.dat" {
+        nbt_table.weather = Some(dat::read_weather(absolute_path));
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/world_clocks.dat" {
+        return TransformType::Drop;
+    }
+    if relative_path == "data/minecraft/world_gen_settings.dat" {
+        nbt_table.world_gen_settings = Some(dat::read_worldgen(absolute_path));
+        return TransformType::Drop;
     }
 
     // Specific One-Offs
@@ -255,14 +300,24 @@ fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
 fn execute_file_operations(
     new_world_path: &Path,
     operations: &Vec<WorldFileInfo>,
+    nbt_table: &NbtTransfer,
 ) -> Result<(), std::io::Error> {
     for action in operations {
         if let Some(transformed_path) = &action.transformed_path {
-            // Create all parent folders
-            fs::create_dir_all(new_world_path.join(transformed_path.parent().expect("All")))?;
+            if transformed_path == "level.dat" {
+                let oldleveldat = convert_new_leveldat_to_old_leveldat(
+                    nbt_table.level.as_ref().unwrap(),
+                    nbt_table.weather.as_ref().unwrap(),
+                    nbt_table.world_gen_settings.as_ref().unwrap(),
+                );
+                dat::write_leveldat(&new_world_path.join(transformed_path), oldleveldat);
+            } else {
+                // Create all parent folders
+                fs::create_dir_all(new_world_path.join(transformed_path.parent().expect("All")))?;
 
-            // Move each file
-            fs::copy(&action.absolute_path, new_world_path.join(transformed_path))?;
+                // Move each file
+                fs::copy(&action.absolute_path, new_world_path.join(transformed_path))?;
+            }
         }
     }
 

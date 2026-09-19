@@ -1,33 +1,28 @@
 use fastnbt::IntArray;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 
 use crate::dat::level_common::{LevelDatDataPacks, LevelDatSpawn, LevelDatVersionInfo};
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct NewLevelDat<'a> {
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct NewLevelDat {
     #[serde(rename = "Data")]
-    #[serde(borrow)]
-    pub data: NewLevelDatData<'a>,
+    pub data: NewLevelDatData,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct NewLevelDatData<'a> {
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct NewLevelDatData {
     #[serde(rename = "allowCommands")]
     pub allow_commands: bool,
 
     #[serde(rename = "DataPacks")]
-    #[serde(borrow)]
-    pub datapacks: Option<LevelDatDataPacks<'a>>,
+    pub datapacks: Option<LevelDatDataPacks>,
 
     #[serde(rename = "DataVersion")]
     pub data_version: i32,
 
-    #[serde(borrow)]
-    pub difficulty_settings: NewLevelDatDifficultySettings<'a>,
+    pub difficulty_settings: NewLevelDatDifficultySettings,
 
-    #[serde(borrow)]
-    pub enabled_features: Option<Vec<Cow<'a, str>>>,
+    pub enabled_features: Option<Vec<String>>,
 
     #[serde(rename = "GameType")]
     pub game_type: i32,
@@ -38,14 +33,12 @@ pub struct NewLevelDatData<'a> {
     pub last_played: i64,
 
     #[serde(rename = "LevelName")]
-    #[serde(borrow)]
-    pub level_name: Cow<'a, str>,
+    pub level_name: String,
 
     pub singleplayer_uuid: Option<IntArray>,
 
     #[serde(rename = "ServerBrands")]
-    #[serde(borrow)]
-    pub server_brands: Option<Vec<Cow<'a, str>>>,
+    pub server_brands: Option<Vec<String>>,
 
     pub spawn: LevelDatSpawn,
 
@@ -61,20 +54,20 @@ pub struct NewLevelDatData<'a> {
     pub was_modded: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct NewLevelDatDifficultySettings<'a> {
-    pub difficulty: Cow<'a, str>,
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct NewLevelDatDifficultySettings {
+    pub difficulty: String,
     pub hardcore: bool,
     pub locked: bool,
 }
 
-impl<'a> NewLevelDatDifficultySettings<'a> {
+impl NewLevelDatDifficultySettings {
     pub fn get_difficulty_integer(&self) -> i8 {
-        match self.difficulty {
-            Cow::Borrowed("peaceful") => 0,
-            Cow::Borrowed("easy") => 1,
-            Cow::Borrowed("normal") => 2,
-            Cow::Borrowed("hard") => 3,
+        match self.difficulty.as_str() {
+            "peaceful" => 0,
+            "easy" => 1,
+            "normal" => 2,
+            "hard" => 3,
             _ => panic!(
                 "{} is not a valid difficulty setting in level.dat!",
                 self.difficulty

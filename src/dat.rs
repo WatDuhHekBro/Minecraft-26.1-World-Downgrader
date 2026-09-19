@@ -1,15 +1,15 @@
-mod convert_level;
-mod custom_boss_events;
-mod ender_dragon_fight;
-mod game_rules;
-mod level_common;
-mod level_new;
-mod level_old;
-mod scheduled_events;
-mod wandering_trader;
-mod weather;
-mod world_clocks;
-mod world_gen_settings;
+pub mod convert_level;
+pub mod custom_boss_events;
+pub mod ender_dragon_fight;
+pub mod game_rules;
+pub mod level_common;
+pub mod level_new;
+pub mod level_old;
+pub mod scheduled_events;
+pub mod wandering_trader;
+pub mod weather;
+pub mod world_clocks;
+pub mod world_gen_settings;
 
 use flate2::{Compression, read::GzDecoder, write::GzEncoder};
 use std::{
@@ -18,7 +18,10 @@ use std::{
     path::Path,
 };
 
-use crate::dat::level_new::NewLevelDat;
+use crate::dat::{
+    level_new::NewLevelDat, level_old::OldLevelDat, weather::NewWeather,
+    world_gen_settings::NewWorldGenSettings,
+};
 
 pub fn read_gzipped_bytes(absolute_path: &Path) -> Vec<u8> {
     let file = File::open(absolute_path).unwrap();
@@ -43,25 +46,19 @@ pub fn read_leveldat(absolute_path: &Path) -> NewLevelDat {
     leveldat
 }
 
-pub fn write_leveldat(absolute_path: &Path) {
-    //
+pub fn write_leveldat(absolute_path: &Path, leveldat: OldLevelDat) {
+    let bytes = fastnbt::to_bytes(&leveldat).unwrap();
+    write_gzipped_bytes(absolute_path, &bytes);
 }
 
-/*pub fn asdf() {
-    let file = File::open("/home/watduhhekbro/downloads/galarov/GALAROV_TEST/level.dat").unwrap();
-    let filew =
-        File::create("/home/watduhhekbro/downloads/galarov/GALAROV_TEST/level++.dat").unwrap();
+pub fn read_weather(absolute_path: &Path) -> NewWeather {
+    let bytes = read_gzipped_bytes(absolute_path);
+    let data = fastnbt::from_bytes::<NewWeather>(&bytes).unwrap();
+    data
+}
 
-    // Player dat files are compressed with GZip.
-    let mut decoder = GzDecoder::new(file);
-    let mut data = vec![];
-    decoder.read_to_end(&mut data).unwrap();
-
-    let player = fastnbt::from_bytes::<OldLevelDat>(data.as_slice()).unwrap();
-
-    println!("{:#?}", player);
-
-    let new_bytes = fastnbt::to_bytes(&player).unwrap();
-    let mut encoder = GzEncoder::new(filew, Compression::fast());
-    encoder.write_all(&new_bytes).unwrap();
-}*/
+pub fn read_worldgen(absolute_path: &Path) -> NewWorldGenSettings {
+    let bytes = read_gzipped_bytes(absolute_path);
+    let data = fastnbt::from_bytes::<NewWorldGenSettings>(&bytes).unwrap();
+    data
+}

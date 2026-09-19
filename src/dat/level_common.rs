@@ -1,19 +1,16 @@
 use fastnbt::IntArray;
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 
-#[derive(Deserialize, Serialize, Debug)]
-pub struct LevelDatDataPacks<'a> {
+#[derive(Deserialize, Serialize, Debug, Clone)]
+pub struct LevelDatDataPacks {
     #[serde(rename = "Disabled")]
-    #[serde(borrow)]
-    pub disabled: Vec<Cow<'a, str>>,
+    pub disabled: Vec<String>,
 
     #[serde(rename = "Enabled")]
-    #[serde(borrow)]
-    pub enabled: Vec<Cow<'a, str>>,
+    pub enabled: Vec<String>,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct LevelDatSpawn {
     pub dimension: String,
     pub pitch: f32,
@@ -21,7 +18,7 @@ pub struct LevelDatSpawn {
     pub pos: IntArray,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct LevelDatVersionInfo {
     #[serde(rename = "Id")]
     pub id: i32,

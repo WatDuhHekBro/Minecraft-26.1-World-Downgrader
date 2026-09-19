@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
 
 use crate::dat::{
     level_common::{LevelDatDataPacks, LevelDatSpawn, LevelDatVersionInfo},
@@ -9,15 +8,14 @@ use crate::dat::{
 };
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct OldLevelDat<'a> {
+pub struct OldLevelDat {
     #[serde(rename = "Data")]
-    #[serde(borrow)]
-    data: OldLevelDatData<'a>,
+    data: OldLevelDatData,
 }
 
 // Option doesn't matter too much here because you're only writing.
 #[derive(Deserialize, Serialize, Debug)]
-struct OldLevelDatData<'a> {
+struct OldLevelDatData {
     #[serde(rename = "allowCommands")]
     allow_commands: bool,
 
@@ -54,8 +52,7 @@ struct OldLevelDatData<'a> {
     //#[serde(rename = "CustomBossEvents")]
     //custom_boss_events: serde_json::Value,
     #[serde(rename = "DataPacks")]
-    #[serde(borrow)]
-    datapacks: Option<LevelDatDataPacks<'a>>,
+    datapacks: Option<LevelDatDataPacks>,
 
     #[serde(rename = "DataVersion")]
     data_version: i32,
@@ -70,8 +67,7 @@ struct OldLevelDatData<'a> {
 
     //#[serde(rename = "DimensionData")]
     //dimension_data: serde_json::Value,
-    #[serde(borrow)]
-    enabled_features: Option<Vec<Cow<'a, str>>>,
+    enabled_features: Option<Vec<String>>,
 
     //#[serde(rename = "GameRules")]
     // NOTE: It's just "game_rules" according to my 1.21.11 level.dat.
@@ -87,8 +83,7 @@ struct OldLevelDatData<'a> {
     last_played: i64,
 
     #[serde(rename = "LevelName")]
-    #[serde(borrow)]
-    level_name: Cow<'a, str>,
+    level_name: String,
 
     #[serde(rename = "MapFeatures")]
     map_features: bool,
@@ -102,8 +97,7 @@ struct OldLevelDatData<'a> {
     random_seed: i64,
 
     #[serde(rename = "ServerBrands")]
-    #[serde(borrow)]
-    server_brands: Option<Vec<Cow<'a, str>>>,
+    server_brands: Option<Vec<String>>,
 
     // NOTE: Appears in my 1.21.11 level.dat but not the old wiki
     spawn: LevelDatSpawn,
@@ -146,9 +140,9 @@ struct OldLevelDatData<'a> {
 }
 
 pub fn convert_new_leveldat_to_old_leveldat(
-    leveldat: NewLevelDat,
-    weather: NewWeather,
-    worldgen: NewWorldGenSettings,
+    leveldat: &NewLevelDat,
+    weather: &NewWeather,
+    worldgen: &NewWorldGenSettings,
 ) -> OldLevelDat {
     let NewLevelDatData {
         allow_commands,
@@ -167,7 +161,7 @@ pub fn convert_new_leveldat_to_old_leveldat(
         version,
         version_info: _,
         was_modded,
-    } = leveldat.data;
+    } = leveldat.data.clone();
 
     let NewWeatherData {
         clear_weather_time,
@@ -183,7 +177,7 @@ pub fn convert_new_leveldat_to_old_leveldat(
             border_center_x: 0.0,
             border_center_z: 0.0,
             border_damage_per_block: 0.0,
-            border_size: 0.0,
+            border_size: 6000000.0,
             border_safe_zone: 0.0,
             border_size_lerp_target: 0.0,
             border_size_lerp_time: 0,
