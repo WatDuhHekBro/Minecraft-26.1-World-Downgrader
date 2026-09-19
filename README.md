@@ -19,3 +19,5 @@ A small tool to downgrade worlds in the new Minecraft 26.1 level format to the o
 - Doesn't support modded dimensions
     - Would need figure out `modid` to `DIM#` conversion first (or prompt?)
     - `chunks.dat`, `raids.dat`, `world_border.dat`
+- The `level.dat` conversion might miss some more obscure fields, as the old Wiki documentation (pre 26.1) was noticeably outdated
+    - This program errs on the side of caution and adds duplicate NBT entries on level.dat. You can use an NBT editor like [Dovetail](https://offroaders123.github.io/Dovetail/) to edit out these extra fields.

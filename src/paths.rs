@@ -14,21 +14,16 @@ use crate::dat;
 struct WorldFileInfo {
     // /home/watduhhekbro/downloads/galarov/GALAROV_TEST_done/dimensions/minecraft/overworld/data/minecraft/chunk_tickets.dat
     absolute_path: PathBuf,
-    // /home/watduhhekbro/downloads/galarov/GALAROV_TEST_done
-    //world_path: PathBuf,
-    // /home/watduhhekbro/downloads/galarov/GALAROV_TEST_done (Downgraded)
-    //new_world_path: PathBuf,
     // dimensions/minecraft/overworld/data/minecraft/chunk_tickets.dat
     relative_path: PathBuf,
     // data/chunks.dat
-    transformed_path: PathBuf,
+    transformed_path: Option<PathBuf>,
     nbt_operation: Option<i32>,
 }
 
 enum TransformType {
-    SimpleMove(PathBuf),
-    //SimpleMove(String),
-    MoveAndNbtEdit(PathBuf, i32),
+    Move(PathBuf),
+    Drop,
     KeepAsIs,
 }
 
@@ -83,15 +78,13 @@ fn get_list_of_all_move_operations(
             .strip_prefix(world_path)
             .expect(ERROR_PATH_STRIP_PREFIX);
         let transformed_path = match get_transformed_path_dirs(relative_path) {
-            TransformType::SimpleMove(path_buf) => path_buf.to_path_buf(),
-            TransformType::MoveAndNbtEdit(path_buf, _) => path_buf.to_path_buf(),
+            TransformType::Move(path_buf) => Some(path_buf.to_path_buf()),
+            TransformType::Drop => None,
             // If there's nothing to do, you still copy the file over, just at the same location.
-            TransformType::KeepAsIs => relative_path.to_path_buf(),
+            TransformType::KeepAsIs => Some(relative_path.to_path_buf()),
         };
         let info = WorldFileInfo {
             absolute_path: absolute_path.clone(),
-            //world_path: world_path.to_path_buf(),
-            //new_world_path: world_path.join(" (Downgraded)"),
             relative_path: relative_path.to_path_buf(),
             transformed_path,
             nbt_operation: None,
@@ -122,7 +115,7 @@ fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
                         //
                     }
                 }
-                TransformType::SimpleMove(Box::new(Path::new("").join("")))
+                TransformType::Move(Box::new(Path::new("").join("")))
             } else {
                 TransformType::KeepAsIs
             }
@@ -137,86 +130,66 @@ fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
 
     // Specific dimension data files (comes before general dimension handlers below)
     /*if relative_path == "dimensions/minecraft/overworld/data/minecraft/raids.dat" {
-        return TransformType::SimpleMove(String::new());
+        return TransformType::Move(String::new());
     }
     if relative_path == "" {
-        return TransformType::SimpleMove(String::new());
+        return TransformType::Move(String::new());
     }
     if relative_path == "" {
-        return TransformType::SimpleMove(String::new());
+        return TransformType::Move(String::new());
     }
 
     // General dimension data (entities, poi, region)
     if let Some(relative_path) = relative_path.strip_prefix("dimensions/minecraft/overworld") {
-        return TransformType::SimpleMove(String::from(relative_path));
+        return TransformType::Move(String::from(relative_path));
     }
     if let Some(relative_path) = relative_path.strip_prefix("dimensions/minecraft/the_nether") {
-        return TransformType::SimpleMove(format!("DIM-1/{relative_path}"));
+        return TransformType::Move(format!("DIM-1/{relative_path}"));
     }
     if let Some(relative_path) = relative_path.strip_prefix("dimensions/minecraft/the_end") {
-        return TransformType::SimpleMove(Box::new(Path::new("DIM1").join(relative_path)));
+        return TransformType::Move(Box::new(Path::new("DIM1").join(relative_path)));
     }
 
     // Player Data
     if let Some(relative_path) = relative_path.strip_prefix("players/advancements") {
-        return TransformType::SimpleMove(Box::new(Path::new("advancements").join(relative_path)));
+        return TransformType::Move(Box::new(Path::new("advancements").join(relative_path)));
     }
     if let Some(relative_path) = relative_path.strip_prefix("players/data") {
-        return TransformType::SimpleMove(Box::new(Path::new("playerdata").join(relative_path)));
+        return TransformType::Move(Box::new(Path::new("playerdata").join(relative_path)));
     }
     if let Some(relative_path) = relative_path.strip_prefix("players/stats") {
-        return TransformType::SimpleMove(Box::new(Path::new("stats").join(relative_path)));
+        return TransformType::Move(Box::new(Path::new("stats").join(relative_path)));
     }
 
     TransformType::KeepAsIs*/
 
     // -----
 
-    // Dimension Data
-    /*if relative_path.starts_with("dimensions") {
-        //
-    }
-
-    // Specific dimension data files (comes before general dimension handlers below)
-    if relative_path == "" {
-        return TransformType::SimpleMove(Box::new(Path::new("").join(relative_path)));
-    }*/
-
     // NBT Stuff
     if relative_path == "level.dat" {
-        dat::asdf();
         return TransformType::KeepAsIs;
     }
 
     // Specific One-Offs
     if relative_path == "data/minecraft/maps/last_id.dat" {
-        return TransformType::SimpleMove(PathBuf::from("data/idcounts.dat"));
+        return TransformType::Move(PathBuf::from("data/idcounts.dat"));
     }
     if relative_path == "resourcepacks/resources.zip" {
-        return TransformType::SimpleMove(PathBuf::from("resources.zip"));
+        return TransformType::Move(PathBuf::from("resources.zip"));
     }
     if let Ok(path) = relative_path.strip_prefix("generated/namespace/structure") {
-        return TransformType::SimpleMove(Path::new("generated/namespace/structures").join(path));
+        return TransformType::Move(Path::new("generated/namespace/structures").join(path));
     }
-    /*if relative_path == "data/minecraft/random_sequences.dat" {
-        return TransformType::SimpleMove(PathBuf::from("data/random_sequences.dat"));
-    }
-    if relative_path == "data/minecraft/scoreboard.dat" {
-        return TransformType::SimpleMove(PathBuf::from("data/scoreboard.dat"));
-    }
-    if relative_path == "data/minecraft/stopwatches.dat" {
-        return TransformType::SimpleMove(PathBuf::from("data/stopwatches.dat"));
-    }*/
 
     // Maps
     if let Ok(path) = relative_path.strip_prefix("data/minecraft/maps") {
         let new_file_name = path.file_name().unwrap().to_str().unwrap();
-        return TransformType::SimpleMove(Path::new("data").join(format!("map_{new_file_name}")));
+        return TransformType::Move(Path::new("data").join(format!("map_{new_file_name}")));
     }
 
     // General Data Namespace
     if let Ok(path) = relative_path.strip_prefix("data/minecraft") {
-        return TransformType::SimpleMove(Path::new("data").join(path));
+        return TransformType::Move(Path::new("data").join(path));
     }
 
     // General dimension data (entities, poi, region)
@@ -224,56 +197,56 @@ fn get_transformed_path_dirs(relative_path: &Path) -> TransformType {
         // <world>/data/raids.dat = <world>/dimensions/minecraft/overworld/data/minecraft/raids.dat
         if let Ok(path) = path.strip_prefix("data/minecraft") {
             if path == "chunk_tickets.dat" {
-                return TransformType::SimpleMove(Path::new("data").join("chunks.dat"));
+                return TransformType::Move(Path::new("data").join("chunks.dat"));
             } else {
-                return TransformType::SimpleMove(Path::new("data").join(path));
+                return TransformType::Move(Path::new("data").join(path));
             }
         }
         // <world>/region = <world>/dimensions/minecraft/overworld/region
         else {
-            return TransformType::SimpleMove(Path::new("").join(path));
+            return TransformType::Move(Path::new("").join(path));
         }
     }
     if let Ok(path) = relative_path.strip_prefix("dimensions/minecraft/the_nether") {
         // <world>/data/raids.dat = <world>/dimensions/minecraft/overworld/data/minecraft/raids.dat
         if let Ok(path) = path.strip_prefix("data/minecraft") {
             if path == "chunk_tickets.dat" {
-                return TransformType::SimpleMove(Path::new("DIM-1/data").join("chunks.dat"));
+                return TransformType::Move(Path::new("DIM-1/data").join("chunks.dat"));
             } else {
-                return TransformType::SimpleMove(Path::new("DIM-1/data").join(path));
+                return TransformType::Move(Path::new("DIM-1/data").join(path));
             }
         }
         // <world>/region = <world>/dimensions/minecraft/overworld/region
         else {
-            return TransformType::SimpleMove(Path::new("DIM-1").join(path));
+            return TransformType::Move(Path::new("DIM-1").join(path));
         }
     }
     if let Ok(path) = relative_path.strip_prefix("dimensions/minecraft/the_end") {
         // <world>/data/raids.dat = <world>/dimensions/minecraft/overworld/data/minecraft/raids.dat
         if let Ok(path) = path.strip_prefix("data/minecraft") {
             if path == "chunk_tickets.dat" {
-                return TransformType::SimpleMove(Path::new("DIM1/data").join("chunks.dat"));
+                return TransformType::Move(Path::new("DIM1/data").join("chunks.dat"));
             } else if path == "raids.dat" {
-                return TransformType::SimpleMove(Path::new("DIM1/data").join("raids_end.dat"));
+                return TransformType::Move(Path::new("DIM1/data").join("raids_end.dat"));
             } else {
-                return TransformType::SimpleMove(Path::new("DIM1/data").join(path));
+                return TransformType::Move(Path::new("DIM1/data").join(path));
             }
         }
         // <world>/region = <world>/dimensions/minecraft/overworld/region
         else {
-            return TransformType::SimpleMove(Path::new("DIM1").join(path));
+            return TransformType::Move(Path::new("DIM1").join(path));
         }
     }
 
     // Player Data
     if let Ok(path) = relative_path.strip_prefix("players/advancements") {
-        return TransformType::SimpleMove(Path::new("advancements").join(path));
+        return TransformType::Move(Path::new("advancements").join(path));
     }
     if let Ok(path) = relative_path.strip_prefix("players/data") {
-        return TransformType::SimpleMove(Path::new("playerdata").join(path));
+        return TransformType::Move(Path::new("playerdata").join(path));
     }
     if let Ok(path) = relative_path.strip_prefix("players/stats") {
-        return TransformType::SimpleMove(Path::new("stats").join(path));
+        return TransformType::Move(Path::new("stats").join(path));
     }
 
     TransformType::KeepAsIs
@@ -284,14 +257,13 @@ fn execute_file_operations(
     operations: &Vec<WorldFileInfo>,
 ) -> Result<(), std::io::Error> {
     for action in operations {
-        // Create all parent folders
-        fs::create_dir_all(new_world_path.join(&action.transformed_path.parent().expect("All")))?;
+        if let Some(transformed_path) = &action.transformed_path {
+            // Create all parent folders
+            fs::create_dir_all(new_world_path.join(transformed_path.parent().expect("All")))?;
 
-        // Move each file
-        fs::copy(
-            &action.absolute_path,
-            new_world_path.join(&action.transformed_path),
-        )?;
+            // Move each file
+            fs::copy(&action.absolute_path, new_world_path.join(transformed_path))?;
+        }
     }
 
     Ok(())

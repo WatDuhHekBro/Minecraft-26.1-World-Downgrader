@@ -303,3 +303,46 @@ deleted:    level.dat_old
 ```
 FileFixOperations.moveRegex("command_storage_([a-z0-9_.-]+)\\.dat", "$1/command_storage\\.dat"),
 ```
+
+
+
+# Wiki Dump (Excluded)
+
+```
+[Double] BorderCenterX: Center of the world border on the X coordinate. Defaults to 0.
+[Double] BorderCenterZ: Center of the world border on the Z coordinate. Defaults to 0.
+[Double] BorderDamagePerBlock: Defaults to 0.2.
+[Double] BorderSize: Width and length of the border of the world. Defaults to 60000000.
+[Double] BorderSafeZone: Defaults to 5.
+[Double] BorderSizeLerpTarget: Defaults to 60000000.
+[Long] BorderSizeLerpTime: Defaults to 0.
+[Double] BorderWarningBlocks: Defaults to 5.
+[Double] BorderWarningTime: Defaults to 15.
+
+[NBT Compound / JSON Object] DimensionData: This tag contains level data specific to certain dimensions.
+
+    [NBT Compound / JSON Object] 1: Data for the End.
+        [NBT Compound / JSON Object] DragonFight: Data for the ender dragon fight. Appears only after the End is entered.
+            [NBT Compound / JSON Object] ExitPortalLocation: Location of the End's exit portal that the ender dragon flies to upon its death.
+                [Byte] X: The X coordinate of the portal.
+                [Byte] Y: The Y coordinate of the portal.
+                [Byte] Z: The Z coordinate of the portal.
+            [NBT List / JSON Array] Gateways: Contains a list of locations of the end gateway portals that haven't been spawned.
+                [Int]: The angle of a future gateway, from 0 to 19. 0 is east of the exit portal, and numbers increase clockwise.
+            [Boolean] DragonKilled: 1 or 0 (true/false) - If the dragon is currently alive.
+            [Long] DragonUUIDLeast: The least significant bits of the current ender dragon's Universally Unique IDentifier. This is joined with DragonUUIDMost to form the dragon's unique ID.
+            [Long] DragonUUIDMost: The most significant bits of the current ender dragon's Universally Unique IDentifier. This is joined with DragonUUIDLeast to form the dragon's unique ID.
+            [Boolean] PreviouslyKilled: 1 or 0 (true/false) - If the ender dragon has ever been defeated. Used to determine how much XP is given by dragon and whether to spawn a Dragon Egg.
+
+[NBT List / JSON Array] enabled_features: List of experimental features enabled for this world. Doesn't appear if there are no experimental features enabled.
+
+    [String]: A single experimental feature.
+
+[String] generatorName: Used in 1.15 and below. The name of the generator; default, flat, largeBiomes, amplified, buffet, debug_all_block_states or default_1_1. Not case sensitive, but always written in the case here. The last one can exist only if the file was edited. It is a variation of the default generation. It can also be customized if it is a customized world from before 1.13. In this case the world becomes default if opened using 1.13 or newer.
+[NBT Compound / JSON Object] generatorOptions: Used in 1.15 and below. Used in buffet, superflat, and old customized worlds. Format below.
+[Int] generatorVersion: Used in 1.15 and below. The version of the level generator. The effects of changing this are unknown, but values other than 0 have been observed.
+[Boolean] MapFeatures: 1 or 0 (true/false) - true if the map generator should place structures such as villages, strongholds, and mineshafts. Defaults to 1. Always 1 if the world type is Customized.
+[NBT Compound / JSON Object] Player: The state of the singleplayer player. This overrides the <player>.dat file with the same name as the singleplayer player. This is saved by servers only if it already exists, otherwise it is not saved for server worlds. See Player.dat format.
+[Long] RandomSeed: The random level seed used to generate consistent terrain.
+[Long] SizeOnDisk: The estimated size in bytes of the level. Currently not modified or used by Minecraft, but was previously.
+```

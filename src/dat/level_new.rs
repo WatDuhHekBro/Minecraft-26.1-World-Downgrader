@@ -2,100 +2,83 @@ use fastnbt::IntArray;
 use serde::{Deserialize, Serialize};
 use std::borrow::Cow;
 
+use crate::dat::level_common::{LevelDatDataPacks, LevelDatSpawn, LevelDatVersionInfo};
+
 #[derive(Deserialize, Serialize, Debug)]
 pub struct NewLevelDat<'a> {
     #[serde(rename = "Data")]
     #[serde(borrow)]
-    data: NewLevelDatData<'a>,
+    pub data: NewLevelDatData<'a>,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct NewLevelDatData<'a> {
+pub struct NewLevelDatData<'a> {
     #[serde(rename = "allowCommands")]
-    allow_commands: bool,
+    pub allow_commands: bool,
 
     #[serde(rename = "DataPacks")]
     #[serde(borrow)]
-    datapacks: Option<NewLevelDatDataPacks<'a>>,
+    pub datapacks: Option<LevelDatDataPacks<'a>>,
 
     #[serde(rename = "DataVersion")]
-    data_version: i32,
+    pub data_version: i32,
 
     #[serde(borrow)]
-    difficulty_settings: Option<NewLevelDatDifficultySettings<'a>>,
+    pub difficulty_settings: NewLevelDatDifficultySettings<'a>,
 
     #[serde(borrow)]
-    enabled_features: Option<Vec<Cow<'a, str>>>,
+    pub enabled_features: Option<Vec<Cow<'a, str>>>,
 
     #[serde(rename = "GameType")]
-    game_type: i32,
+    pub game_type: i32,
 
-    initialized: bool,
+    pub initialized: bool,
 
     #[serde(rename = "LastPlayed")]
-    last_played: i64,
+    pub last_played: i64,
 
     #[serde(rename = "LevelName")]
     #[serde(borrow)]
-    level_name: Cow<'a, str>,
+    pub level_name: Cow<'a, str>,
 
-    singleplayer_uuid: Option<IntArray>,
+    pub singleplayer_uuid: Option<IntArray>,
 
     #[serde(rename = "ServerBrands")]
     #[serde(borrow)]
-    server_brands: Option<Vec<Cow<'a, str>>>,
+    pub server_brands: Option<Vec<Cow<'a, str>>>,
 
-    spawn: NewLevelDatSpawn,
+    pub spawn: LevelDatSpawn,
 
     #[serde(rename = "Time")]
-    time: i64,
+    pub time: i64,
 
-    version: i32,
+    pub version: i32,
 
     #[serde(rename = "Version")]
-    version_info: NewLevelDatVersionInfo,
+    pub version_info: LevelDatVersionInfo,
 
     #[serde(rename = "WasModded")]
-    was_modded: bool,
+    pub was_modded: bool,
 }
 
 #[derive(Deserialize, Serialize, Debug)]
-struct NewLevelDatDataPacks<'a> {
-    #[serde(rename = "Disabled")]
-    #[serde(borrow)]
-    disabled: Vec<Cow<'a, str>>,
-
-    #[serde(rename = "Enabled")]
-    #[serde(borrow)]
-    enabled: Vec<Cow<'a, str>>,
+pub struct NewLevelDatDifficultySettings<'a> {
+    pub difficulty: Cow<'a, str>,
+    pub hardcore: bool,
+    pub locked: bool,
 }
 
-#[derive(Deserialize, Serialize, Debug)]
-struct NewLevelDatDifficultySettings<'a> {
-    difficulty: Cow<'a, str>,
-    hardcore: bool,
-    locked: bool,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-struct NewLevelDatSpawn {
-    dimension: String,
-    pitch: f32,
-    yaw: f32,
-    pos: IntArray,
-}
-
-#[derive(Deserialize, Serialize, Debug)]
-struct NewLevelDatVersionInfo {
-    #[serde(rename = "Id")]
-    id: i32,
-
-    #[serde(rename = "Name")]
-    name: String,
-
-    #[serde(rename = "Series")]
-    series: String,
-
-    #[serde(rename = "Snapshot")]
-    snapshot: bool,
+impl<'a> NewLevelDatDifficultySettings<'a> {
+    pub fn get_difficulty_integer(&self) -> i8 {
+        match self.difficulty {
+            Cow::Borrowed("peaceful") => 0,
+            Cow::Borrowed("easy") => 1,
+            Cow::Borrowed("normal") => 2,
+            Cow::Borrowed("hard") => 3,
+            _ => panic!(
+                "{} is not a valid difficulty setting in level.dat!",
+                self.difficulty
+            ),
+        }
+    }
 }

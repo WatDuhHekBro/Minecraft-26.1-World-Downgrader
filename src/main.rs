@@ -7,7 +7,6 @@ mod dat;
 mod paths;
 
 fn main() -> Result<(), slint::PlatformError> {
-    dat::asdf();
     /*paths::create_downgraded_copy(&String::from(
         r"/home/watduhhekbro/downloads/galarov/GALAROV_TEST_done/",
     ));*/
